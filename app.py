@@ -118,8 +118,10 @@ try:
         if up:
             grids = fetch_xlsx(up.getvalue())
     else:
-        sheet = st.sidebar.text_input(f"{age} spreadsheet URL / ID", value=secret(["sheets", age], ""),
-                                      help="Set defaults in .streamlit/secrets.toml under [sheets].")
+        sheet = secret(["sheets", age], "")
+        if not sheet:
+            sheet = st.sidebar.text_input(f"{age} spreadsheet URL / ID", type="password",
+                                          help="Or set it in secrets under [sheets] to hide this box.")
         if st.sidebar.button("Refresh data", use_container_width=True):
             st.cache_data.clear()
         if sheet:
