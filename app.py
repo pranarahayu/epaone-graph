@@ -21,7 +21,7 @@ BASE = Path(__file__).parent
 BRAND_DIR = BASE / "assets" / "brand"
 AGES = ["U16", "U18", "U20"]
 
-st.set_page_config(page_title="EPA ONE Graphics", page_icon="⚽", layout="wide")
+st.set_page_config(page_title="EPA ONE Graphics", layout="wide")
 
 
 # --------------------------------------------------------------------------- #
