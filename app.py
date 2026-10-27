@@ -251,7 +251,7 @@ def disp(name: str, upper=True, suffix=""):
 # --------------------------------------------------------------------------- #
 # Main
 # --------------------------------------------------------------------------- #
-st.title(f"EPA ONE {age_label} — Social Graphics")
+st.title(f"EPA ONE {age_label} | Untuk Bang Adit")
 st.caption(f"Output: **{fmt_name}**")
 
 if not grids:
