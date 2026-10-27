@@ -21,7 +21,7 @@ BASE = Path(__file__).parent
 BRAND_DIR = BASE / "assets" / "brand"
 AGES = ["U16", "U18", "U20"]
 
-st.set_page_config(page_title="EPA ONE Graphics", page_icon="⚽", layout="wide")
+st.set_page_config(page_title="EPA ONE Graphics", layout="wide")
 
 
 # --------------------------------------------------------------------------- #
@@ -71,14 +71,14 @@ def downloads(images: list[tuple[str, Image.Image]], key: str):
     enc, ext, mime = to_jpg, "jpg", "image/jpeg"
     if len(images) == 1:
         name, img = images[0]
-        st.download_button(f"⬇️ Download {ext.upper()}", enc(img), f"{name}.{ext}", mime,
+        st.download_button(f"Download {ext.upper()}", enc(img), f"{name}.{ext}", mime,
                            key=f"dl_{key}", use_container_width=True, type="primary")
     else:
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
             for name, img in images:
                 z.writestr(f"{name}.{ext}", enc(img))
-        st.download_button(f"⬇️ Download all ({len(images)}) as ZIP", buf.getvalue(), f"{key}.zip",
+        st.download_button(f"Download all ({len(images)}) as ZIP", buf.getvalue(), f"{key}.zip",
                            "application/zip", key=f"dl_{key}", use_container_width=True, type="primary")
 
 
@@ -101,7 +101,7 @@ def photo_input(label: str, key: str, help_text: str | None = None):
 # --------------------------------------------------------------------------- #
 # Sidebar — data source, platform, branding
 # --------------------------------------------------------------------------- #
-st.sidebar.title("⚽ EPA ONE Graphics")
+st.sidebar.title("EPA ONE Graphics")
 
 age = st.sidebar.radio("Age category", AGES, horizontal=True)
 age_label = age.replace("U", "U-")
@@ -120,7 +120,7 @@ try:
     else:
         sheet = st.sidebar.text_input(f"{age} spreadsheet URL / ID", value=secret(["sheets", age], ""),
                                       help="Set defaults in .streamlit/secrets.toml under [sheets].")
-        if st.sidebar.button("🔄 Refresh data", use_container_width=True):
+        if st.sidebar.button("Refresh data", use_container_width=True):
             st.cache_data.clear()
         if sheet:
             if mode.startswith("Google Sheet (service"):
@@ -138,7 +138,7 @@ except Exception as e:  # noqa: BLE001
     st.stop()
 
 st.sidebar.divider()
-fmt_name = st.sidebar.selectbox("📱 Platform / size", list(R.FORMATS), index=0)
+fmt_name = st.sidebar.selectbox("Platform / size", list(R.FORMATS), index=0)
 FMT = R.FORMATS[fmt_name]
 placeholder = st.sidebar.toggle("Photo placeholder until a photo is uploaded", value=True,
                                 help="Off = the layout uses the space instead (bigger table / centred results).")
@@ -184,7 +184,7 @@ def font_picker(role: str, default: str):
     return files or None, name
 
 
-with st.sidebar.expander("🔤 Fonts", expanded=False):
+with st.sidebar.expander("Fonts", expanded=False):
     st.caption("Fonts are downloaded from Google Fonts on first use and cached. "
                "Lato is the closest match to the original artwork.")
     h_files, h_name = font_picker("Heading", "Lato")
@@ -192,7 +192,7 @@ with st.sidebar.expander("🔤 Fonts", expanded=False):
     b_files, b_name = (h_files, h_name) if same else font_picker("Body", "Lato")
 R.set_fonts(heading=h_files, body=b_files)
 
-with st.sidebar.expander("🌈 Colours"):
+with st.sidebar.expander("Colours"):
     _t = R.Theme()
     c1, c2 = st.columns(2)
     bg_main = c1.color_picker("Background", "#073a89")
@@ -206,13 +206,13 @@ with st.sidebar.expander("🌈 Colours"):
     navy = c1.color_picker("Text on white pills", _t.navy)
     sub_c = c2.color_picker("Title 2nd/3rd line", _t.subtitle)
 
-with st.sidebar.expander("🎨 Brand logos"):
+with st.sidebar.expander("Brand logos"):
     st.caption(f"Default files are read from `assets/brand/`. Uploads here override them for this session.")
     up_league = st.file_uploader("League logo (top-left)", type=["png", "webp"], key="b_league")
     up_comp = st.file_uploader("EPA ONE logo (top-right)", type=["png", "webp"], key="b_comp")
     up_badge = st.file_uploader(f"EPA ONE {age_label} badge (centre)", type=["png", "webp"], key=f"b_badge_{age}")
 
-with st.sidebar.expander("🛡️ Club logos (session upload)"):
+with st.sidebar.expander("Club logos (session upload)"):
     st.caption("Permanent logos live in `assets/logos/` (see clubs.csv). "
                "Uploading here works for this session only — name files after the club, "
                "e.g. `Persija Jakarta.png`.")
@@ -253,7 +253,7 @@ st.title(f"EPA ONE {age_label} — Social Graphics")
 st.caption(f"Output: **{fmt_name}**")
 
 if not grids:
-    st.info("👈 Choose a data source in the sidebar to begin. "
+    st.info("Choose a data source in the sidebar to begin. "
             "Each age category (U16, U18, U20) reads its own Master Report spreadsheet.")
     st.stop()
 
@@ -267,7 +267,7 @@ last_gw = ds.last_played_gw() or 1
 next_gw = ds.next_unplayed_gw() or last_gw
 
 sel_gw = st.select_slider(
-    "🗓️ Gameweek", options=ds.gameweeks, value=last_gw,
+    "Gameweek", options=ds.gameweeks, value=last_gw,
     help="Results show this gameweek, standings are as of this gameweek, "
          "fixtures default to the next gameweek(s). Each tab can still be adjusted.")
 played_upto = ds.matches[(ds.matches.gw <= sel_gw)]
@@ -288,7 +288,7 @@ def following_gws(gw: int) -> list[int]:
     return nxt[:1]
 
 
-tab_st, tab_fx, tab_rs, tab_chk = st.tabs(["📊 Standings", "📅 Fixtures", "🏁 Results", "🔎 Data check"])
+tab_st, tab_fx, tab_rs, tab_chk = st.tabs(["Standings", "Fixtures", "Results", "Data check"])
 
 # ---------------------------------- STANDINGS ------------------------------ #
 with tab_st:
