@@ -187,8 +187,7 @@ def font_picker(role: str, default: str):
 
 
 with st.sidebar.expander("Fonts", expanded=False):
-    st.caption("Fonts are downloaded from Google Fonts on first use and cached. "
-               "Lato is the closest match to the original artwork.")
+    st.caption("Fonts are downloaded from Google Fonts on first use and cached. ")
     h_files, h_name = font_picker("Heading", "Lato")
     same = st.checkbox("Use the same font for club names & numbers", value=True)
     b_files, b_name = (h_files, h_name) if same else font_picker("Body", "Lato")
@@ -251,7 +250,7 @@ def disp(name: str, upper=True, suffix=""):
 # --------------------------------------------------------------------------- #
 # Main
 # --------------------------------------------------------------------------- #
-st.title(f"EPA ONE {age_label} | Untuk Bang Adit")
+st.title(f"EPA ONE {age_label} - Untuk Bang Adit")
 st.caption(f"Output: **{fmt_name}**")
 
 if not grids:
