@@ -154,8 +154,21 @@ UPLOAD = "Upload .ttf/.otf…"
 
 
 @st.cache_resource(show_spinner="Downloading font from Google Fonts…")
+def _google_family_cached(name: str):
+    files, log = F.get_family(name)
+    if not files:
+        raise RuntimeError("\n".join(log) or f"Couldn't download '{name}'.")  # not cached → retried next time
+    return files, log
+
+
 def google_family(name: str):
-    return F.get_family(name)
+    try:
+        return _google_family_cached(name)
+    except RuntimeError as e:
+        return {}, str(e).splitlines()
+
+
+FONT_PROBLEMS: list[str] = []
 
 
 def font_picker(role: str, default: str):
@@ -174,15 +187,16 @@ def font_picker(role: str, default: str):
             n = u.name.lower()
             key = ("black" if "black" in n or "heavy" in n else "xbold" if "extrabold" in n
                    else "semi" if "semibold" in n else "bold")
-            files[key] = dest
+            files[key] = str(dest)
         return files or None, "upload"
     name = st.text_input("Google Font name (exactly as on fonts.google.com)", key=f"fontname_{role}") \
         if choice == OTHER else choice
     if not name:
         return None, choice
-    files = google_family(name)
+    files, log = google_family(name)
     if not files:
-        st.warning(f"Couldn't download '{name}' — using Inter. Check the spelling on fonts.google.com.")
+        FONT_PROBLEMS.append(f"**{role} font '{name}' couldn't be loaded — using Inter.**  \n" +
+                             "  \n".join(f"• {m}" for m in log[-4:]))
     return files or None, name
 
 
@@ -191,7 +205,16 @@ with st.sidebar.expander("Fonts", expanded=False):
     h_files, h_name = font_picker("Heading", "Lato")
     same = st.checkbox("Use the same font for club names & numbers", value=True)
     b_files, b_name = (h_files, h_name) if same else font_picker("Body", "Lato")
-R.set_fonts(heading=h_files, body=b_files)
+    R.set_fonts(heading=h_files, body=b_files)
+    if st.checkbox("Show which font files are used", value=False):
+        st.json(R.font_report())
+    if st.button("Clear font cache & retry", use_container_width=True):
+        st.cache_resource.clear()
+        import shutil
+        shutil.rmtree(F.CACHE_DIR, ignore_errors=True)
+        st.rerun()
+for _p in FONT_PROBLEMS:
+    st.warning(_p)
 
 with st.sidebar.expander("Colours"):
     _t = R.Theme()
