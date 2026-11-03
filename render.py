@@ -73,39 +73,65 @@ _BUNDLED = {
     "black": FONT_DIR / "Inter-Black.otf", "xbold": FONT_DIR / "Inter-ExtraBold.otf",
     "bold": FONT_DIR / "Inter-Bold.otf", "semi": FONT_DIR / "Inter-SemiBold.otf",
 }
-_FONTS: dict[str, dict[str, Path]] = {"heading": dict(_BUNDLED), "body": dict(_BUNDLED)}
+_FONTS: dict[str, dict[str, str]] = {r: {k: str(v) for k, v in _BUNDLED.items()} for r in ("heading", "body")}
 
 
 def set_fonts(heading: Optional[dict] = None, body: Optional[dict] = None):
-    """heading/body: {"black": path, "xbold": path, "bold": path, "semi": path}.
-    Missing weights fall back to the nearest one given, then to bundled Inter."""
+    """heading/body: {"black": spec, "xbold": spec, "bold": spec, "semi": spec}, where a spec is a
+    font path, optionally "path|wght=900" for variable fonts. Missing weights use the nearest
+    one given; anything unusable falls back to bundled Inter."""
+    order = ["black", "xbold", "bold", "semi"]
     for role, files in (("heading", heading), ("body", body)):
-        merged = dict(_BUNDLED)
-        if files:
-            order = ["black", "xbold", "bold", "semi"]
-            given = {k: Path(v) for k, v in files.items() if v and Path(v).exists()}
-            for w in order:
-                if w in given:
-                    merged[w] = given[w]
-                elif given:
-                    i = order.index(w)
-                    near = sorted(given, key=lambda g: abs(order.index(g) - i))[0]
-                    merged[w] = given[near]
+        merged = {k: str(v) for k, v in _BUNDLED.items()}
+        given = {k: str(v) for k, v in (files or {}).items()
+                 if v and Path(str(v).split("|", 1)[0]).exists()}
+        for w in order:
+            if w in given:
+                merged[w] = given[w]
+            elif given:
+                i = order.index(w)
+                merged[w] = given[sorted(given, key=lambda g: abs(order.index(g) - i))[0]]
         _FONTS[role] = merged
 
 
+def font_report() -> dict:
+    """Which file each role/weight actually renders with (for the sidebar)."""
+    out = {}
+    for role, m in _FONTS.items():
+        for w, spec in m.items():
+            ok = _load_font(spec, 40) is not None and not getattr(_load_font(spec, 40), "_fallback", False)
+            out[f"{role} {w}"] = (Path(spec.split("|", 1)[0]).name + (" @" + spec.split("=", 1)[1]
+                                  if "|wght=" in spec else "")) + ("" if ok else "  ⚠️ failed → default")
+    return out
+
+
 @lru_cache(maxsize=1024)
-def _load_font(path: str, size: int):
+def _load_font(spec: str, size: int):
+    path, _, w = str(spec).partition("|wght=")
     try:
-        return ImageFont.truetype(path, size)
+        f = ImageFont.truetype(path, size)
+        if w:
+            vals = []
+            for ax in f.get_variation_axes():
+                n = ax.get("name", b"")
+                n = (n.decode(errors="ignore") if isinstance(n, bytes) else str(n)).lower()
+                vals.append(max(ax["minimum"], min(ax["maximum"], int(w))) if n.startswith("weight") or n == "wght"
+                            else ax["default"])
+            f.set_variation_by_axes(vals)
+        return f
     except Exception:
-        return ImageFont.load_default(size)
+        try:  # bundled Inter of the same weight is a better fallback than Pillow's default
+            return ImageFont.truetype(str(_BUNDLED["black"]), size)
+        except Exception:
+            f = ImageFont.load_default(size)
+            f._fallback = True
+            return f
 
 
 def font(weight: str, size: float) -> ImageFont.FreeTypeFont:
     role = "heading" if weight.startswith("h_") else "body"
     w = weight[2:] if weight.startswith("h_") else weight
-    return _load_font(str(_FONTS[role][w]), max(6, int(round(size))))
+    return _load_font(_FONTS[role][w], max(6, int(round(size))))
 
 
 def text_w(d: ImageDraw.ImageDraw, s: str, f) -> float:
